@@ -119,11 +119,6 @@ def calculate_profit_loss(from_town, to_town, trade_data, goods_weights):
         sell_price = trade_data.get(to_town, {}).get(good, {}).get('Sell Price', None)
         weight = goods_weights.get(good, None)
 
-        # Debug: Print buy and sell prices
-        print(f"Good: {good}")
-        print(f"Buy Price in {from_town}: {buy_price}")
-        print(f"Sell Price in {to_town}: {sell_price}")
-
         if buy_price is not None and sell_price is not None and weight is not None:
             profit_loss = sell_price - buy_price
             profit_loss_per_weight = profit_loss / weight
