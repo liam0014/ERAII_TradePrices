@@ -195,7 +195,7 @@ def main():
 
     while program_running:  # Use the flag as the condition
         try:
-            # Prompt user for the trade file path
+            # Prompt user for the trade file path - you can replace this with your hardcoded path of your TradePrices file, for a smoother experience.
             csv_file_path = input("Enter the path and filename for the TradePrices CSV file: ")
 
             # Validate if the file exists and is a CSV file
