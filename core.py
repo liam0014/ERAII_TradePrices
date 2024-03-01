@@ -233,6 +233,7 @@ def main():
                 elif user_choice == 3:
                     # Refresh trade data
                     trade_data, town_names = read_csv_file(csv_file_path)
+                    town_names.sort()  # Sort the town names alphabetically
                     print("Trade data refreshed.")
                 elif user_choice == 4:
                     print("Exiting. Goodbye!")
