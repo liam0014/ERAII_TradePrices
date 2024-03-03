@@ -125,7 +125,7 @@ def calculate_profit_loss(from_town, to_town, trade_data, goods_weights):
             profit_loss_data.append((good, profit_loss, profit_loss_per_weight))
 
     # Sort goods by profit_loss_per_weight (highest to lowest)
-    sorted_goods = sorted(profit_loss_data, key=lambda x: x[2], reverse=True)
+    sorted_goods = sorted(profit_loss_data, key=lambda x: x[2], reverse=False)
 
     # Print sorted goods along with profit/loss per weight unit
     for good, profit_loss, profit_loss_per_weight in sorted_goods:
