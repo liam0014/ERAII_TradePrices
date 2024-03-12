@@ -134,17 +134,19 @@ def calculate_profit_loss(from_town, to_town, trade_data, goods_weights):
         print(f"Profit/Loss per Weight: {profit_loss_per_weight:.2f}")
         print("-" * 30)
 
-def find_best_trade(trade_data, town_names, goods_weights):
+def find_top_trades(trade_data, town_names, g_weights, num_trades=5):
     """
-    Finds the single best trade based on profit/loss to weight ratio from a selected departure town.
+    Finds the top 'num_trades' trades based on profit/loss to weight ratio from a selected departure town.
 
     Args:
         trade_data (dict): A dictionary containing trade data.
         town_names (list): A list of town names.
-        goods_weights (dict): A dictionary containing the weights of goods.
+        g_weights (dict): A dictionary containing the weights of goods.
+        num_trades (int): The number of top trades to find. Defaults to 3.
 
     Returns:
-        tuple: A tuple containing (to_town, best_good, profit_per_item, profit_per_weight).
+        list: A list of tuples, where each tuple contains 
+              (to_town, best_good, profit_per_item, profit_per_weight).
     """
     while True:
         try:
@@ -157,43 +159,52 @@ def find_best_trade(trade_data, town_names, goods_weights):
             from_choice = int(input("Enter the number corresponding to your port of origin: "))
             if from_choice == len(town_names) + 1:  # Exit option
                 print("Exiting. Returning to the main menu.")
-                return None, None, None, None
-            
+                return None  # Return 'None' for the exit case
+
             from_town = town_names[from_choice - 1]  # Adjust for 0-based indexing
-
-            best_profit_per_weight = float('-inf')
-            best_good = None
-            to_town = None
-            profit_per_item = 0
-
-            for town in trade_data:
-                if town != from_town:
-                    for good, data in trade_data[from_town].items():
-                        if good in trade_data[town] and good in goods_weights:
-                            buy_price = data.get('Buy Price')
-                            sell_price = trade_data[town][good].get('Sell Price')
-                            weight = goods_weights[good]
-
-                            # Ensure buy_price, sell_price, and weight are not None and weight is not zero
-                            if buy_price is not None and sell_price is not None and weight is not None:
-                                profit = sell_price - buy_price
-                                profit_per_weight = profit / weight
-
-                                if profit_per_weight > best_profit_per_weight:
-                                    best_profit_per_weight = profit_per_weight
-                                    best_good = good
-                                    to_town = town
-                                    profit_per_item = profit
-
-            if best_good is None:
-                print(f"No profitable trade found for {from_town}. Please choose another town.")
-                continue
-
-            return to_town, best_good, profit_per_item, best_profit_per_weight
-
+            
         except (ValueError, IndexError):
             print("Invalid choice. Please select a valid departure town.")
             continue
+
+
+        all_trades = []  # Store top trades
+        seen_goods = set()  # Track the unique goods already found
+
+        for town in trade_data:
+            if town != from_town:
+                found_goods = set()  # Reset for each destination town
+                for good, data in trade_data[from_town].items():
+                    if good in trade_data[town] and good in g_weights: 
+                        buy_price = data.get('Buy Price')
+                        sell_price = trade_data[town][good].get('Sell Price')
+                        weight = g_weights[good]  
+
+                        if buy_price is not None and sell_price is not None and weight is not None:
+                            profit = sell_price - buy_price
+                            profit_per_weight = profit / weight
+                            to_town = town
+
+                            all_trades.append((to_town, good, profit, profit_per_weight))
+
+        if not all_trades:
+            print(f"No profitable trade combinations found for {from_town}. Please choose another town.")
+            continue
+
+        all_trades.sort(key=lambda x: x[3], reverse=True)  # Sort by profit_per_weight
+        
+        # Get top unique trades
+        top_trades = []
+        for to_town, good, profit, profit_per_weight in all_trades:
+            if good not in seen_goods:
+                top_trades.append((to_town, good, profit, profit_per_weight))
+                seen_goods.add(good)
+
+                if len(top_trades) >= num_trades:
+                    break
+
+        return from_town, top_trades  
+
 
 def main():
     """
@@ -221,11 +232,16 @@ def main():
                 
                 if user_choice == 1:
                     # Call the function to find the best trade
-                    town, best_good, profit_per_item, profit_per_weight = find_best_trade(trade_data, town_names, weights)
-                    if town is not None:
-                        print(f"The best trade route (for profit to weight) is to {town} with {best_good}.")
-                        print(f"The profit per item is: {profit_per_item}.")
-                        print(f"The profit per weight is: {profit_per_weight}.")
+                    from_town, top_trades = find_top_trades(trade_data, town_names, weights)
+                    print(f"Top 5 Trades from {from_town}:")
+                    print("-" * 30)
+                    for i, trade in enumerate(top_trades, 1):
+                        to_town, good, profit_per_item, profit_per_weight = trade
+                        print(f"{i}. To: {to_town}")
+                        print(f"Good: {good}")
+                        print(f"Profit/Loss: {profit_per_item}")
+                        print(f"Profit/Loss per Weight: {profit_per_weight}")
+                        print("-" * 30)
                 elif user_choice == 2:
                     # Call the functions to compare prices between two towns
                     from_town, to_town = prompt_user_for_towns(town_names)
